@@ -20,9 +20,6 @@ export function CheckNextMovePosible(posX: any, posY: any, direction: any, mapDa
         row -= 1;
     }
 
-    console.log("row = ", row);
-    console.log("col = ", col);
-
     if ((row < 0) || (row >= maxRow) || (col < 0) || (col >= maxCol)) {
         return false;
     } else if ((mapData[row][col] == 1) || (mapData[row][col] == 2)) {

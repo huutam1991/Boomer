@@ -1,6 +1,6 @@
 
 
-export function DrawExplosion(context: any, explosionList: any, explosionImage: any) {
+export function DrawExplosion(context: any, explosionList: any, explosionImage: any, data: any) {
 
     var i;
     for (i = 0; i < explosionList.length; i++) {
@@ -30,7 +30,11 @@ export function DrawExplosion(context: any, explosionList: any, explosionImage: 
     //clear extra explosion image
     i = 0;
     while (i < explosionList.length) {
-        if (explosionList[i].currentIndex >= explosion.numOfImages) {
+
+        if (explosionList[i].currentIndex >= explosionImage.numOfImages) {
+            var explosion = explosionList[i];
+            debugger
+            data[explosion.row][explosion.col] = 0;
             i++;
         } else {
             break;
@@ -81,9 +85,11 @@ export function AddExplosion(explosionRow: any, explosionCol: any, mapData:any, 
                 explosionList.push(explosion);
 
                 if (mapData[currentRow][currentCol] == 1) {
-                    mapData[currentRow][currentCol] = 0;
+                    mapData[currentRow][currentCol] = 0; 
                     break;
                 }
+
+                mapData[currentRow][currentCol] = 6; // explosion at this cell
             }
         }
     }

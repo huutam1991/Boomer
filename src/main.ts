@@ -10,6 +10,7 @@ import { DrawBomb } from "./ts/drawBomb";
 import { DrawExplosion } from "./ts/drawExplosion";
 import { AddExplosion } from "./ts/drawExplosion";
 import { CheckNextMovePosible } from "./ts/checkNextMovePosible";
+import { DrawGhost } from "./ts/drawGhost";
 
 //global configuration
 var gameWidth = 1300; 
@@ -20,7 +21,7 @@ var lengthOfExplosion = 3;
 var nRow;
 var nCol;
 
-var mapData = [
+var data = [
     [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0],
     [0, 2, 0, 2, 0, 2, 1, 2, 0, 2, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 1, 0],
     [1, 1, 1, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -200,8 +201,14 @@ var ghostImage = {
     folder: "assets/",
     image: null,
     inGameWidth: 0,
-    inGameHeight: 0
+    inGameHeight: 0,
+    xSpeed: 0,
+    ySpeed: 0,
+    speedWithWall: 1 / 10,
 }
+
+var dr = [-1, 0, 1, 0];
+var dc = [0, -1, 0, 1];
 
 export function LoadGhost() {
     ghostImage.image = new Image();
@@ -212,6 +219,38 @@ export function LoadGhost() {
 
     ghostImage.inGameWidth = gameWidth / nCol;
     ghostImage.inGameHeight = gameHeight / nRow;
+
+    ghostImage.xSpeed = imortalWall.inGameWidth * ghostImage.speedWithWall;
+    ghostImage.ySpeed = imortalWall.inGameHeight * ghostImage.speedWithWall;
+
+    var i;
+    var j;
+    var k;
+    for (i = 0; i < nRow; i++) {
+        for (j = 0; j < nCol; j++) {
+            if (data[i][j] == 3) {
+                
+                var ghost = {
+                    posX: j * ghostImage.inGameWidth,
+                    posY: i * ghostImage.inGameHeight,
+                    direction: 0,
+                    isKilled: false
+                }
+                for (k = 0; k < 4; k++) {
+                    var newRow = i + dr[k];
+                    var newCol = j + dc[k];
+                    if ((newRow >= 0) && (newRow < nRow) && (newCol >= 0) && (newCol < nCol)) {
+                        if (data[newRow][newCol] == 0) {
+                            ghost.direction = k;
+                            break;
+                        }
+                    }
+                }
+
+                ghostList.push(ghost);
+            }
+        }
+    }
 }
 var ghostList = [];
 
@@ -326,7 +365,7 @@ function onUpdate() {
                 break;
         }
 
-        if (CheckNextMovePosible(bomber.posX, bomber.posY, bomber.direction, mapData, imortalWall) == false) {
+        if (CheckNextMovePosible(bomber.posX, bomber.posY, bomber.direction, data, imortalWall) == false) {
             bomber.posX = savePosX;
             bomber.posY = savePosY;
         }
@@ -351,8 +390,8 @@ function onUpdate() {
     var numOfExtraBomb = i;
     for (i = 0; i < numOfExtraBomb; i++) {
         var bomb = bombList[i];
-        mapData[bomb.row][bomb.col] = 0;
-        AddExplosion(bomb.row, bomb.col, mapData, explosionList, lengthOfExplosion);
+        data[bomb.row][bomb.col] = 0;
+        AddExplosion(bomb.row, bomb.col, data, explosionList, lengthOfExplosion);
     }
     for (i = 0; i < numOfExtraBomb; i++) {
         bombList.splice(0, 1);
@@ -363,7 +402,7 @@ function onUpdate() {
 
         var cell = CheckInCell(bomber.posX, bomber.posY, imortalWall);
 
-        if ((mapData[cell.row][cell.col] != 1) && (mapData[cell.row][cell.col] != 2)) {
+        if ((data[cell.row][cell.col] != 1) && (data[cell.row][cell.col] != 2)) {
             var aBomb = {
                 col: cell.col,
                 row: cell.row,
@@ -371,10 +410,31 @@ function onUpdate() {
             }
             bombList.push(aBomb);
 
-            mapData[cell.row][cell.col] = 4;
+            data[cell.row][cell.col] = 4;
         }
         
         isPutBomb = false;
+    }
+
+    //update ghost
+    for (i = 0; i < ghostList.length; i++) {
+        var ghost = ghostList[i];
+        var currentDirection = ghost.direction;
+        var newPosX = ghost.posX + dc[currentDirection] * ghostImage.xSpeed;
+        var newPosY = ghost.posY + dr[currentDirection] * ghostImage.ySpeed;
+
+        if (CheckNextMovePosible(newPosX, newPosY, currentDirection, data, imortalWall) == true) {
+            ghost.posX = newPosX;
+            ghost.posY = newPosY;
+        } else {
+            currentDirection = (currentDirection + 2) % 4;
+            ghost.direction = currentDirection;
+        }
+
+        var ghostCell = CheckInCell(ghost.posX, ghost.posY, imortalWall);
+        if (data[ghostCell.row][ghostCell.col] == 6) { // this ghost is kill
+            ghost.isKilled = true;
+        }
     }
 }
 
@@ -385,10 +445,11 @@ function onDraw() {
     context.clearRect(0, 0, gameWidth, gameHeight);
 
     DrawImage(context, grassImage);
-    DrawWall(context, mapData, imortalWall, normalWall);
+    DrawWall(context, data, imortalWall, normalWall);
     DrawBomb(context, bombList, bombImage);
-    DrawExplosion(context, explosionList, explosionImage);
+    DrawExplosion(context, explosionList, explosionImage, data);
     DrawBomber(context, bomber);
+    DrawGhost(context, ghostList, ghostImage);
 }
 
 function StartGameLoop() {
@@ -413,8 +474,8 @@ function initializeGame() {
     };
 
     //num of Rows and Colums of game
-    nRow = mapData.length;
-    nCol = mapData[0].length;
+    nRow = data.length;
+    nCol = data[0].length;
 
     LoadWall();
     LoadBomberImage();
