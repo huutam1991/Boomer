@@ -436,6 +436,21 @@ function onUpdate() {
             ghost.isKilled = true;
         }
     }
+
+    //check if bomber is kill by his bomb
+    var bomberCell = CheckInCell(bomber.posX, bomber.posY, imortalWall);
+    if (data[bomberCell.row][bomberCell.col] == 6) {//bomber is killed
+        KillBomber();
+    }
+
+    //check if bomber is kill by ghost
+
+}
+
+function KillBomber() {
+    bomber.posX = 0;
+    bomber.posY = 0;
+    alert("you have been killed");
 }
 
 function onDraw() {

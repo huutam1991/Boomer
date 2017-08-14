@@ -58,6 +58,7 @@ export function AddExplosion(explosionRow: any, explosionCol: any, mapData:any, 
     }
 
     explosionList.push(explosionMain);
+    mapData[explosionRow][explosionCol] = 6;
 
     var maxRow = mapData.length;
     var maxCol = mapData[0].length;
