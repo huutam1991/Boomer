@@ -9,7 +9,7 @@ pipeline {
     }
     stage('deploy') {
       steps {
-        bat 'cp ./dist E:/Projects/1241234'
+        bat 'xcopy ./dist E:/Projects/1241234'
       }
     }
   }
