@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('') {
       steps {
-        echo 'Pipeline message'
+        bat 'gulp'
       }
     }
   }
