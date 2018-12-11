@@ -3,6 +3,7 @@ pipeline {
   stages {
     stage('554655') {
       steps {
+        bat 'git pull'
         bat 'npm install'
         bat 'node ./node_modules/gulp/bin/gulp.js'
       }
