@@ -4,6 +4,7 @@ pipeline {
     stage('error') {
       steps {
         bat 'npm install'
+        bat 'gulp'
       }
     }
   }
